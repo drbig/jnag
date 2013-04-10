@@ -9,12 +9,39 @@
 import java.awt.*;
 import java.io.*;
 import java.util.*;
-import javax.swing.*;
+import javax.swing.JFrame;
+import javax.swing.JOptionPane;
 
-public class jnag {
-  static Console cons = System.console();
+class JNagger {
+  JFrame frame = new JFrame("JNagger");
+  Object[] labels = {"Keep", "Close", "Again"};
 
-  private static long parseTimeIn(String timestr) {
+  Console cons = System.console();
+  StringBuilder msg = new StringBuilder(128);
+  int counter = 0;
+
+  class PopupTask extends TimerTask {
+    class PopupThread extends Thread {
+      public void run() {
+        int resp;
+        do {
+          resp = JOptionPane.showOptionDialog(frame, msg.toString(), 
+              String.format("Jay Nagger #%d", counter),
+              JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE,
+              null, labels, labels[2]);
+        } while (resp == 2);
+        if (resp != 0) System.exit(0);
+      }
+    }
+
+    public void run() {
+      counter++;
+      PopupThread p = new PopupThread();
+      p.start();
+    }
+  }
+
+  private long parseTimeIn(String timestr) {
     long delay = 0;
 
     StringBuilder sb = new StringBuilder(2);
@@ -37,7 +64,7 @@ public class jnag {
     return delay * 1000;
   }
 
-  private static long parseTimeAt(String timestr) {
+  private long parseTimeAt(String timestr) {
     long delay = 0;
 
     String[] elems = timestr.split(":");
@@ -55,59 +82,72 @@ public class jnag {
     return delay * 1000;
   }
 
-  private static void die(String msg, int retcode) {
+  private void die(String msg, int retcode) {
     cons.printf(msg + "\n");
     System.exit(retcode);
   }
 
-  private static void printHelp() {
-    die("Args: at|in|every timestr msgstr\n"
-      + " e.g. in 45m laundry's done\n"
-      + "      every 2h15m do yourself a break\n"
-      + "      every 5s nag nag nag nag\n"
-      + "      at 17 it's five o'clock!\n"
-      + "      at 6:12 sunrise, go to sleep!\n"
-      + "      at 3:13:37 leet time", 1);
+  private void printHelp() {
+    die("Args: (exactly) at|in|every timestr msgstr\n"
+        + " e.g. in 45m laundry's done\n"
+        + "      every 2h15m do yourself a break\n"
+        + "      exactly every 5s nag nag nag nag\n"
+        + "      at 17 it's five o'clock!\n"
+        + "      at 6:12 sunrise, go to sleep!\n"
+        + "      at 3:13:37 leet time", 1);
   }
 
-  public static void main(String[] args) throws InterruptedException {
-    JFrame frame = new JFrame("JNag");
-    Object[] labels = {"Keep", "Close", "Again"};
-    StringBuilder msg = new StringBuilder(128);
-
+  public void run(String[] args) throws InterruptedException {
+    Timer timer;
     long delay = 0;
     boolean loop = false;
+    int offset = 0;
     int resp;
 
     if (args.length < 3) printHelp();
+    if ("exactly".equals(args[0])) offset = 1;
 
-    switch (args[0]) {
+    switch (args[offset]) {
       case "every":
         loop = true;
       case "in":
-        delay = parseTimeIn(args[1]);
+        delay = parseTimeIn(args[offset+1]);
         break;
       case "at":
-        delay = parseTimeAt(args[1]);
+        delay = parseTimeAt(args[offset+1]);
         break;
       default: printHelp();
     }
 
-    for (int i = 2; i < args.length; i++) {
+    for (int i = offset + 2; i < args.length; i++) {
       msg.append(args[i]);
       if (i != (args.length - 1)) msg.append(" ");
     }
 
-    do {
-      Thread.sleep(delay);
+    if (loop && (offset == 1)) {
+      timer = new Timer();
+      timer.schedule(new PopupTask(), delay, delay);
+    } else {
       do {
-        resp = JOptionPane.showOptionDialog(frame, msg.toString(), "JNag",
-            JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE,
-            null, labels, labels[2]);
-      } while (resp == 2);
-      if (resp != 0) loop = false;
-    } while (loop);
+        Thread.sleep(delay);
+        do {
+          counter++;
+          resp = JOptionPane.showOptionDialog(frame, msg.toString(),
+              String.format("Jay Nagger #%d", counter),
+              JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE,
+              null, labels, labels[2]);
+        } while (resp == 2);
+        if (resp != 0) loop = false;
+      } while (loop);
 
-    System.exit(0);
+      System.exit(0);
+    }
+  }
+}
+
+public class jnag {
+  public static void main(String[] args) throws InterruptedException {
+    JNagger jn = new JNagger();
+    jn.run(args);
   }
 }
