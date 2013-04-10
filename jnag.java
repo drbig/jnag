@@ -1,20 +1,28 @@
+/*
+ * jnag/jnag.java - The annoying nagger, yours truly
+ *
+ * © Copyright Piotr S. Staszewski 2013
+ * Visit http://www.drbig.one.pl for contact information.
+ *
+ */
+
 import java.awt.*;
 import java.io.*;
 import java.util.*;
 import javax.swing.*;
 
-public class wxnag {
+public class jnag {
   static Console cons = System.console();
 
   private static long parseTimeIn(String timestr) {
     long delay = 0;
 
-    StringBuilder sb = new StringBuilder();
+    StringBuilder sb = new StringBuilder(2);
     for (int i = 0; i < timestr.length(); i++) {
       char c = timestr.charAt(i);
-      if (Character.isDigit(c)) {
+      if (Character.isDigit(c))
         sb.append(c);
-      } else {
+      else {
         int val = Integer.parseInt(sb.toString());
         sb = new StringBuilder();
         switch (c) {
@@ -34,14 +42,15 @@ public class wxnag {
 
     String[] elems = timestr.split(":");
     int[] vals = {0,0,0};
-    for (int i = 0; i < elems.length; i++) {
+    for (int i = 0; i < elems.length; i++)
       vals[i] = Integer.parseInt(elems[i]);
-    }
 
     Calendar cal = Calendar.getInstance();
     delay += (vals[0] - cal.get(Calendar.HOUR_OF_DAY)) % 24 * 3600;
     delay += (vals[1] - cal.get(Calendar.MINUTE)) % 60 * 60;
     delay += (vals[2] - cal.get(Calendar.SECOND)) % 60;
+
+    if (delay < 0) delay = 24*3600 + delay;
 
     return delay * 1000;
   }
@@ -52,20 +61,25 @@ public class wxnag {
   }
 
   private static void printHelp() {
-    die("Args: at|in|every timestr msgstr", 1);
+    die("Args: at|in|every timestr msgstr\n"
+      + " e.g. in 45m laundry's done\n"
+      + "      every 2h15m do yourself a break\n"
+      + "      every 5s nag nag nag nag\n"
+      + "      at 17 it's five o'clock!\n"
+      + "      at 6:12 sunrise, go to sleep!\n"
+      + "      at 3:13:37 leet time", 1);
   }
 
   public static void main(String[] args) throws InterruptedException {
-    JFrame frame = new JFrame("WxNag");
+    JFrame frame = new JFrame("JNag");
     Object[] labels = {"Keep", "Close", "Again"};
+    StringBuilder msg = new StringBuilder(128);
 
     long delay = 0;
     boolean loop = false;
-    String msg;
+    int resp;
 
-    if (args.length < 3) {
-      printHelp();
-    }
+    if (args.length < 3) printHelp();
 
     switch (args[0]) {
       case "every":
@@ -76,17 +90,18 @@ public class wxnag {
       case "at":
         delay = parseTimeAt(args[1]);
         break;
-      default:
-        printHelp();
-        break;
+      default: printHelp();
     }
 
-    msg = args[2];
+    for (int i = 2; i < args.length; i++) {
+      msg.append(args[i]);
+      if (i != (args.length - 1)) msg.append(" ");
+    }
+
     do {
       Thread.sleep(delay);
-      int resp;
       do {
-        resp = JOptionPane.showOptionDialog(frame, msg, "WxNag",
+        resp = JOptionPane.showOptionDialog(frame, msg.toString(), "JNag",
             JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE,
             null, labels, labels[2]);
       } while (resp == 2);
