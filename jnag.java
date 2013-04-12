@@ -73,9 +73,9 @@ class JNagger {
       vals[i] = Integer.parseInt(elems[i]);
 
     Calendar cal = Calendar.getInstance();
-    delay += (vals[0] - cal.get(Calendar.HOUR_OF_DAY)) % 24 * 3600;
-    delay += (vals[1] - cal.get(Calendar.MINUTE)) % 60 * 60;
-    delay += (vals[2] - cal.get(Calendar.SECOND)) % 60;
+    delay += (vals[0] - cal.get(Calendar.HOUR_OF_DAY)) * 3600;
+    delay += (vals[1] - cal.get(Calendar.MINUTE)) * 60;
+    delay += (vals[2] - cal.get(Calendar.SECOND));
 
     if (delay < 0) delay = 24*3600 + delay;
 
