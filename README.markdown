@@ -36,14 +36,15 @@ Notes:
 
 Two behaviours for repetitive timers:
 
-1. The default behaviour for every is that the next delay will be counted after you click "Keep" in the currently displayed nagger. Example usage: 'every 2h do yourself a break', and when you see the popup you take a break, then when you come back you click "Keep" and will have another 2h session of work. Obviously there will never be more than one popup visible at once.
+1. The default behaviour for every is that the next delay will be counted after you click "Keep" in the currently displayed nagger. Example usage: 'every 2h do yourself a break', and when you see the popup you take a break, then when you come back you click "Keep" and will have another 2h session of work. Obviously there will never be more than one popup visible at the same time.
 
 2. With the exactly modifier the next delay will be counted immediately after displaying the current nagger. This means that the popups may pile-up in case you were away from the monitor. Important: you'll need to click "Keep" in _every_ instance of the popup to have it running (clicking "Close" on any of them closes the whole program). This is intentional.
 
 ## Popups outside of current application context
 
 Popups are great to get your attention, however if they don't originate from the currently focused application there is one 'problem' with them: they will steal keyboard focus and happily interpret your keystrokes. With default two-button popups this would mean that very often you'll close randomly the dialog without even noticing it, because you were typing at that time.
-The simplest solution to the above I came up with is to have a third button, labeled "Again", that is selected by default, and when clicked will just immediately show the same nagger again. Therefore unless you happen to be typing TAB followed by SPACE _a_lot_ you should not happen to close the dialog accidentally.
+
+The simplest solution to the above I came up with is to have a third button, labeled "Again", that is selected by default, and when clicked will just immediately show the same nagger again. Therefore unless you happen to be typing TAB followed by SPACE _a lot_ you should not happen to close the dialog accidentally.
 
 ## Warning
 
