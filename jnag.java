@@ -20,25 +20,19 @@ class JNagger {
   StringBuilder msg = new StringBuilder(128);
   int counter = 0;
 
-  class PopupTask extends TimerTask {
-    class PopupThread extends Thread {
-      public void run() {
-        int resp;
-        do {
-          resp = JOptionPane.showOptionDialog(frame, msg.toString(), 
-              String.format("Jay Nagger #%d", counter),
-              JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE,
-              null, labels, labels[2]);
-        } while (resp == 2);
-        if (resp != 0) System.exit(0);
-      }
-    }
+  private void die(String msg, int retcode) {
+    cons.printf(msg + "\n");
+    System.exit(retcode);
+  }
 
-    public void run() {
-      counter++;
-      PopupThread p = new PopupThread();
-      p.start();
-    }
+  private void printHelp() {
+    die("Args: (exactly) at|in|every timestr msgstr\n"
+        + " e.g. in 45m check laundry\n"
+        + "      every 2h15m do yourself a break\n"
+        + "      exactly every 5s nag nag nag nag\n"
+        + "      at 17 tea time\n"
+        + "      at 6:12 sunrise, go to sleep\n"
+        + "      at 3:13:37 leet time", 1);
   }
 
   private long parseTimeIn(String timestr) {
@@ -64,6 +58,18 @@ class JNagger {
     return delay * 1000;
   }
 
+  private void dialogLoop() {
+    int resp;
+
+    do {
+      resp = JOptionPane.showOptionDialog(frame, msg.toString(), 
+          String.format("Jay Nagger #%d", counter),
+          JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE,
+          null, labels, labels[2]);
+    } while (resp == 2);
+    if (resp != 0) System.exit(0);
+  }
+
   private long parseTimeAt(String timestr) {
     long delay = 0;
 
@@ -82,19 +88,18 @@ class JNagger {
     return delay * 1000;
   }
 
-  private void die(String msg, int retcode) {
-    cons.printf(msg + "\n");
-    System.exit(retcode);
-  }
+  class PopupTask extends TimerTask {
+    class PopupThread extends Thread {
+      public void run() {
+        dialogLoop();
+      }
+    }
 
-  private void printHelp() {
-    die("Args: (exactly) at|in|every timestr msgstr\n"
-        + " e.g. in 45m laundry's done\n"
-        + "      every 2h15m do yourself a break\n"
-        + "      exactly every 5s nag nag nag nag\n"
-        + "      at 17 it's five o'clock!\n"
-        + "      at 6:12 sunrise, go to sleep!\n"
-        + "      at 3:13:37 leet time", 1);
+    public void run() {
+      counter++;
+      PopupThread p = new PopupThread();
+      p.start();
+    }
   }
 
   public void run(String[] args) throws InterruptedException {
@@ -102,7 +107,6 @@ class JNagger {
     long delay = 0;
     boolean loop = false;
     int offset = 0;
-    int resp;
 
     if (args.length < 3) printHelp();
     if ("exactly".equals(args[0])) offset = 1;
@@ -129,15 +133,9 @@ class JNagger {
       timer.schedule(new PopupTask(), delay, delay);
     } else {
       do {
+        counter++;
         Thread.sleep(delay);
-        do {
-          counter++;
-          resp = JOptionPane.showOptionDialog(frame, msg.toString(),
-              String.format("Jay Nagger #%d", counter),
-              JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE,
-              null, labels, labels[2]);
-        } while (resp == 2);
-        if (resp != 0) loop = false;
+        dialogLoop();
       } while (loop);
 
       System.exit(0);
